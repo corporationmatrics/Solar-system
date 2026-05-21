@@ -1,0 +1,6 @@
+{
+  "name": "Tarang Solar Partner Pro",
+  "description": "Offline-first partner tracking portal for Chhattisgarh with project stage dashboards, gouvernement login safe, WhatsApp updates, and secure ledger statistics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

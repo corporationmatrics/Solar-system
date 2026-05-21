@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Radian Sun -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M54,22 A 8,8 0 1,1 54,38 A 8,8 0 1,1 54,22 Z" />
+    <!-- Sun Rays -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M54,14 L54,18 M54,42 L54,46 M38,30 L42,30 M66,30 L70,30"
+        android:strokeWidth="2"
+        android:strokeColor="#FFC107"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M43,19 L46,22 M65,19 L62,22 M43,41 L46,38 M65,41 L62,38"
+        android:strokeWidth="2"
+        android:strokeColor="#FFC107"
+        android:strokeLineCap="round" />
+
+    <!-- Perspective Solar Panel -->
+    <path
+        android:fillColor="#00629E"
+        android:pathData="M32,74 L76,74 L66,48 L42,48 Z"
+        android:strokeWidth="2.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineJoin="round" />
+    <!-- Solar panel division grid lines -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M49,48 L44,74"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,48 L54,74"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M59,48 L64,74"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M37,61 L71,61"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFF" />
+</vector>
