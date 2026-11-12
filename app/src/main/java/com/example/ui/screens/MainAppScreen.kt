@@ -1649,6 +1649,7 @@ fun AccountsTab(
 fun AccountsPinLockScreen(viewModel: MainViewModel) {
     var enteredText by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
+    val isPinCreated by viewModel.isPinCreated.collectAsState()
 
     Column(
         modifier = Modifier
@@ -1676,7 +1677,8 @@ fun AccountsPinLockScreen(viewModel: MainViewModel) {
                 textAlign = TextAlign.Center
             )
             Text(
-                "Default PIN is \"1234\". Tap numbers below to unlock.",
+                if (isPinCreated) "Enter your 4-digit PIN to unlock."
+                else "First time: choose a 4-digit PIN and tap Unlock. You will need it every time.",
                 color = TarangTextSubtle,
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center
@@ -1744,7 +1746,8 @@ fun AccountsPinLockScreen(viewModel: MainViewModel) {
                                                 enteredText = ""
                                                 errorMessage = ""
                                             } else {
-                                                errorMessage = "Incorrect PIN code. Try again."
+                                                errorMessage = if (enteredText.length != 4) "Enter all 4 digits."
+                                                    else "Incorrect PIN. After 5 wrong tries, wait 30 seconds."
                                                 enteredText = ""
                                             }
                                         }

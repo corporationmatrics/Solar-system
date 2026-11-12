@@ -1,6 +1,8 @@
 package com.example.ui
 
 import android.app.Application
+import android.content.Context
+import android.util.Base64
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.*
@@ -54,12 +56,42 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         "Final Payment Collected"
     )
 
-    // Security Pin Storage (State-based, fallback to default "1234", with ability to change)
-    private val _accountsPin = MutableStateFlow("1234")
-    val accountsPin = _accountsPin.asStateFlow()
+    // Accounts PIN: no default PIN. The first 4-digit PIN entered becomes the PIN.
+    // Only a salted SHA-256 hash is stored (private app prefs, excluded from backups),
+    // so it survives app restarts and is never kept in plain text.
+    private val pinPrefs = application.getSharedPreferences("tarang_accounts_pin", Context.MODE_PRIVATE)
 
-    private val _isPinCreated = MutableStateFlow(true) // Whether the user has initialized their PIN
+    private val _isPinCreated = MutableStateFlow(pinPrefs.contains(KEY_PIN_HASH))
     val isPinCreated = _isPinCreated.asStateFlow()
+
+    private var failedPinAttempts = 0
+    private var pinLockedUntil = 0L
+
+    private fun hashPin(pin: String, salt: ByteArray): String {
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        digest.update(salt)
+        val bytes = digest.digest(pin.toByteArray(Charsets.UTF_8))
+        return Base64.encodeToString(bytes, Base64.NO_WRAP)
+    }
+
+    private fun savePin(pin: String) {
+        val salt = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
+        pinPrefs.edit()
+            .putString(KEY_PIN_SALT, Base64.encodeToString(salt, Base64.NO_WRAP))
+            .putString(KEY_PIN_HASH, hashPin(pin, salt))
+            .apply()
+        _isPinCreated.value = true
+    }
+
+    private fun pinMatches(pin: String): Boolean {
+        val salt = pinPrefs.getString(KEY_PIN_SALT, null) ?: return false
+        val stored = pinPrefs.getString(KEY_PIN_HASH, null) ?: return false
+        val candidate = hashPin(pin, Base64.decode(salt, Base64.NO_WRAP))
+        return java.security.MessageDigest.isEqual(
+            candidate.toByteArray(Charsets.UTF_8),
+            stored.toByteArray(Charsets.UTF_8)
+        )
+    }
 
     private val _isUnlocked = MutableStateFlow(false)
     val isUnlocked = _isUnlocked.asStateFlow()
@@ -76,17 +108,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun verifyPin(enteredPin: String): Boolean {
-        if (enteredPin == _accountsPin.value) {
+        if (enteredPin.length != 4 || !enteredPin.all { it.isDigit() }) return false
+
+        // First use: the PIN entered now becomes the accounts PIN.
+        if (!_isPinCreated.value) {
+            savePin(enteredPin)
             _isUnlocked.value = true
             return true
+        }
+
+        val now = System.currentTimeMillis()
+        if (now < pinLockedUntil) return false
+
+        if (pinMatches(enteredPin)) {
+            failedPinAttempts = 0
+            _isUnlocked.value = true
+            return true
+        }
+
+        failedPinAttempts++
+        if (failedPinAttempts >= 5) {
+            pinLockedUntil = now + 30_000L // 30 s pause after 5 wrong tries
+            failedPinAttempts = 0
         }
         return false
     }
 
     fun changePin(newPin: String) {
-        if (newPin.length == 4) {
-            _accountsPin.value = newPin
-            _isPinCreated.value = true
+        if (newPin.length == 4 && newPin.all { it.isDigit() }) {
+            savePin(newPin)
         }
     }
 
@@ -203,5 +253,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             sb.append("${t.id},${t.customerId},${t.type},\"${t.category}\",${t.amount},\"${t.notes}\"\n")
         }
         return sb.toString()
+    }
+
+    private companion object {
+        const val KEY_PIN_HASH = "pin_hash"
+        const val KEY_PIN_SALT = "pin_salt"
     }
 }
